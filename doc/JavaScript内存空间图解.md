@@ -46,15 +46,15 @@ b = 30;
 ```
 
 ```js
-var a = { name: '前端开发' }
+var a = { name: 'Derrick' }
 var b = a;
-b.name = '进阶';
+b.name = '帅哥';
 
 // 这时a.name的值是多少
 ```
 
 ```js
-var a = { name: '前端开发' }
+var a = { name: 'Derrick' }
 var b = a;
 a = null;
 
@@ -130,30 +130,123 @@ JavaScript的内存生命周期是
 > OK, 言归正传
 >
 
-V8引擎把内存分为两块
+在V8中，将内存分为了新生代（new space）和老生代（old space）。它们特点如下：
 
-- 新生代
-- 老生代
+- 新生代：对象的存活时间较短。新生对象或只经过一次垃圾回收的对象。
+- 老生代：对象存活时间较长。经历过一次或多次垃圾回收的对象。
 
-#### 新生代算法（scavenge）
-
-在分代的基础上，新生代用的是scavenge算法，再具体实现是用cheney算法，它把内存空间一分为二，每一个叫做semispace，这两个semispace一个处于使用，一个处于闲置，处于使用的叫做From，处于闲置的叫做To，赋值时先分配到From，当开始进行垃圾回收时，还在被使用的变量会被复制到To，否则会被直接释放掉，然后From和To互换位置，在开始下一次垃圾回收机制时，如果还被使用则晋升为老生代，或者占用空间大于25%。
-
-它的缺点是只能使用堆内存的一半，这是一个典型的空间换时间算法，但新生代声明周期较短，恰恰就适合这个算法。
-
-#### 老生代算法（mark-sweep & mark-compact）
-
-通过**标记清除**的算法来找到哪些对象是不再继续使用的，使用`a = null`其实仅仅只是做了一个释放引用的操作，让 a 原本对应的值失去引用，脱离执行环境，这个值会在下一次垃圾收集器执行操作时被找到并释放。
-
-在局部作用域中，当函数执行完毕，局部变量也就没有存在的必要了，因此垃圾收集器很容易做出判断并回收。但是全局变量什么时候需要自动释放内存空间则很难判断，因此在开发中，需要尽量避免使用全局变量。
+V8堆的空间等于新生代空间加上老生代空间。我们可以通过 `--max-old-space-size`命令设置老生代空间的最大值，`--max-new-space-size` 命令设置新生代空间的最大值。老生代与新生代的空间大小在程序初始化时设置，一旦生效则不能动态改变。
 
 
 
-## 内存泄漏
+```swift
+node --max-old-space-size=1700 test.js // 单位为 MB
+node --max-new-space-size=1024 test.js // 单位为KB
+```
 
-对于持续运行的服务进程（daemon），必须及时释放不再用到的内存。否则，内存占用越来越高，轻则影响系统性能，重则导致进程崩溃。 对于不再用到的内存，没有及时释放，就叫做内存泄漏（memory leak）
+默认设置下，64位系统的老生代大小为1400M，32位系统为700M。
+ 对于新生代，它由两个 `reserved_semispace_size` 组成。每个`reserved_semispace_size` 的大小在不同位数的机器上大小不同。默认设置下，在64位与32位的系统下分别为16MB和8MB。我们将新生代、老生代、`reserved_semispace_size` 空间大小总结如下表。
 
-最常见的就是计时器[`setInterval()`](https://developer.mozilla.org/zh-CN/docs/Web/API/WindowOrWorkerGlobalScope/setInterval)和[addEventListener](http://www.baidu.com/link?url=l2UHQ1BSHUmTz2hnJVK5XrmQ5Prt8WaOYu8enJm7XK4IzF_W6bsYLClObK68hE_PSAHRjIgHoyQSCg4ddFNbkXTqnxct7xOZuifDdUoqU6_)
+| 类型 \ 系统位数         | 64位   | 32位  |
+| ----------------------- | ------ | ----- |
+| 老生代                  | 1400MB | 700MB |
+| reserved_semispace_size | 16MB   | 8MB   |
+| 新生代                  | 32MB   | 16MB  |
+
+## 回收算法
+
+### Stop The World （全停顿）
+
+在介绍垃圾回收算法之前，我们先了解一下「全停顿」。垃圾回收算法在执行前，需要将应用逻辑暂停，执行完垃圾回收后再执行应用逻辑，这种行为称为 「全停顿」（Stop The World）。例如，如果一次GC需要50ms，应用逻辑就会暂停50ms。
+
+全停顿的目的，是为了解决应用逻辑与垃圾回收器看到的情况不一致的问题。举个例子，在自助餐厅吃饭，高高兴兴地取完食物回来时，结果发现自己餐具被服务员收走了。这里，服务员好比垃圾回收器，餐具就像是分配的对象，我们就是应用逻辑。在我们看来，只是将餐具临时放在桌上，但是服务员看来觉得你已经不需要使用了，因此就收走了。你与服务员对于同一个事物看到的情况是不一致，导致服务员做了与我们不期望的事情。因此，为避免应用逻辑与垃圾回收器看到的情况不一致，垃圾回收算法在执行时，需要停止应用逻辑。
+
+### Scavenge 算法
+
+新生代中的对象主要通过 Scavenge 算法进行垃圾回收。Scavenge 的具体实现，主要采用了Cheney算法。
+
+![img](https:////upload-images.jianshu.io/upload_images/1674837-104b491d8ee8a352.png?imageMogr2/auto-orient/strip|imageView2/2/w/616/format/webp)
+
+V8堆内存空间示意图
+
+Cheney算法采用复制的方式进行垃圾回收。它将堆内存一分为二，每一部分空间称为 semispace。这两个空间，只有一个空间处于使用中，另一个则处于闲置。使用中的 semispace 称为 「From 空间」，闲置的 semispace 称为 「To 空间」。
+
+过程如下：
+
+1. 从 From 空间分配对象，若 semispace 被分配满，则执行 Scavenge 算法进行垃圾回收。
+2. 检查 From 空间的存活对象，若对象存活，则检查对象是否符合晋升条件，若符合条件则晋升到老生代，否则将对象从 From 空间复制到 To 空间。
+3. 若对象不存活，则释放不存活对象的空间。
+4. 完成复制后，将 From 空间与 To 空间进行角色翻转（flip）。
+
+#### 对象晋升
+
+对象晋升的条件有两个：
+
+1）对象是否经历过Scavenge回收。对象从 From 空间复制 To 空间时，会检查对象的内存地址来判断对象是否已经经过一次Scavenge回收。若经历过，则将对象从 From 空间复制到老生代中；若没有经历，则复制到 To 空间。
+
+2）To 空间的内存使用占比是否超过限制。当对象从From 空间复制到 To 空间时，若 To 空间使用超过 25%，则对象直接晋升到老生代中。设置为25%的比例的原因是，当完成 Scavenge 回收后，To 空间将翻转成From 空间，继续进行对象内存的分配。若占比过大，将影响后续内存分配。
+
+对象晋升到老生代后，将接受新的垃圾回收算法处理。下图为Scavenge算法中，对象晋升流程图。
+
+![img](https:////upload-images.jianshu.io/upload_images/1674837-e0defff45eb27070.png?imageMogr2/auto-orient/strip|imageView2/2/w/705/format/webp)
+
+晋升流程图
+
+### 小结
+
+Scavenge 算法的缺点是，它的算法机制决定了只能利用一半的内存空间。但是新生代中的对象生存周期短、存活对象少，进行对象复制的成本不是很高，因而非常适合这种场景。
+
+## Mark-Sweep & Mark-Compact
+
+老生代中的对象有两个特点，第一是存活对象多，第二个存活时间长。若在老生代中使用 Scavenge 算法进行垃圾回收，将会导致复制存活对象的效率不高，且还会浪费一半的空间。因而，V8在老生代采用Mark-Sweep 和 Mark-Compact 算法进行垃圾回收。
+
+### Mark-Sweep
+
+Mark-Sweep，是标记清除的意思。它主要分为标记和清除两个阶段。
+
+- 标记阶段，它将遍历堆中所有对象，并对存活的对象进行标记；
+- 清除阶段，对未标记对象的空间进行回收。
+
+与 Scavenge 算法不同，Mark-Sweep 不会对内存一分为二，因此不会浪费空间。但是，经历过一次 Mark-Sweep 之后，内存的空间将会变得不连续，这样会对后续内存分配造成问题。比如，当需要分配一个比较大的对象时，没有任何一个碎片内支持分配，这将提前触发一次垃圾回收，尽管这次垃圾回收是没有必要的。
+
+![img](https:////upload-images.jianshu.io/upload_images/1674837-3c8b7082d646545d.png?imageMogr2/auto-orient/strip|imageView2/2/w/565/format/webp)
+
+Mark-Sweep 标记与清理的示意图
+
+### Mark-Compact
+
+为了解决内存碎片的问题，提高对内存的利用，引入了 Mark-Compact （标记整理）算法。Mark-Compact 是在 Mark-Sweep 算法上进行了改进，标记阶段与Mark-Sweep相同，但是对未标记的对象处理方式不同。与Mark-Sweep是对未标记的对象立即进行回收，Mark-Compact则是将存活的对象移动到一边，然后再清理端边界外的内存。
+
+![img](https:////upload-images.jianshu.io/upload_images/1674837-023c7d9f472d8f1b.png?imageMogr2/auto-orient/strip|imageView2/2/w/480/format/webp)
+
+Mark-Compact 算法
+
+### 小结
+
+由于Mark-Compact需要移动对象，所以执行速度上，比Mark-Sweep要慢。所以，V8主要使用Mark-Sweep算法，然后在当空间内存分配不足时，采用Mark-Compact算法。
+
+## Incremental Marking（增量标记）
+
+在新生代中，由于存活对象少，垃圾回收效率高，全停顿时间短，造成的影响小。但是老生代中，存活对象多，垃圾回收时间长，全停顿造成的影响大。为了减少全停顿的时间，V8对标记进行了优化，将一次停顿进行的标记过程，分成了很多小步。每执行完一小步就让应用逻辑执行一会儿，这样交替多次后完成标记。如下图所示：
+
+![img](https:////upload-images.jianshu.io/upload_images/1674837-3b49f9629c8abf8e.png?imageMogr2/auto-orient/strip|imageView2/2/w/555/format/webp)
+
+增量标记示意图
+
+长时间的GC，会导致应用暂停和无响应，将会导致糟糕的用户体验。从2011年起，v8就将「全暂停」标记换成了增量标记。改进后的标记方式，最大停顿时间减少到原来的1/6。
+
+## lazy sweeping（延迟清理）
+
+- 发生在增量标记之后
+- 堆确切地知道有多少空间能被释放
+- 延迟清理是被允许的，因此页面的清理可以根据需要进行清理
+- 当延迟清理完成后，增量标记将重新开始。
+
+# 总结
+
+垃圾回收的原理较为复杂，在理解上需要花费一些功夫。了解GC原理，有助于我们对NodeJS项目进行性能瓶颈定位与调优。文章所描述的算法为V8中使用的基础算法，现代V8引擎对垃圾回收进行了很多改进，比如，在Chrome 64和Node.js v10中V8启用了「并行标记」技术，将标记时间缩短了60%~70%。还有「Parallel Scavenger」技术，它将新生代的垃圾回收时间缩短了20%~50%。
+
+垃圾回收是影响服务性能的因素之一，为了提高服务性能，应尽量减少垃圾回收的次数。
 
 ## 补充
 
