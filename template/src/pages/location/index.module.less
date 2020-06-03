@@ -1,0 +1,78 @@
+.container {
+  height: 100vh;
+  overflow: hidden;
+  max-height: 100vh;
+  width: 100%;
+  .list {
+    .item {
+      position: relative;
+      border-bottom: 1px solid #eee;
+      padding: 20px;
+      box-sizing: border-box;
+      width: 100vw;
+      .title {
+        font-size: 30px;
+        margin-bottom: 20px;
+        .now{
+          color: #FFAC52;
+          border-radius: 5px;
+          border: 1px solid #FFAC52;
+          padding: 1px 10px;
+          margin-left: 10px;
+        }
+      }
+      .desc {
+        box-sizing: border-box;
+        color: #666;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+        width: 85%;
+      }
+      p {
+        margin: 0;
+      }
+    }
+    .listIgnore {
+      height: calc(100% - 300px - 100px);
+    }
+  }
+  .mark {
+    display: block;
+    width: 40px;
+    position: absolute;
+    top: 30%;
+    left: 50%;
+    transform: translate(-50%, -100%);
+    transition: 0.5s;
+  }
+  .markUp {
+    animation-iteration-count: infinite;
+    transform: translate(-50%, -175%);
+    animation-name: scaleDraw;
+  }
+  .position{
+    position: absolute;
+    right: 20px;
+    top: calc(60% - 20px);
+    transform: translate(0%, -100%);
+    width: 80px;
+  }
+  .send {
+    top: 20px;
+    right: 20px;
+    padding: 10px 30px;
+    background-color: #019FF0;
+    font-size: 30px;
+    border-radius: 100px;
+    position: fixed;
+    color: #FFF;
+  }
+  .check {
+    right: 20px;
+    top: 50%;
+    width: 30px;
+    transform: translateY(-50%);
+    position: absolute;
+  }
+}

@@ -1,0 +1,19 @@
+# dependencies
+**/node_modules
+
+# production
+/dist
+/.vscode
+.vscode
+package-lock.json
+
+#vscode
+.history
+*.log
+.temp/**
+
+#idea
+.idea
+
+#MAC
+.DC_Store
