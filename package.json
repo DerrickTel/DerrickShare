@@ -1,5 +1,5 @@
 {
-  "name": "react-cli",
+  "name": "react-mobile-cli",
   "version": "0.0.1",
   "description": "",
   "bin": {
@@ -9,7 +9,7 @@
     "type": "git",
     "url": "git+https://github.com/DerrickTel/share.git"
   },
-  "keywords": [],
+  "keywords": ["react", "mobile", "cli"],
   "author": "",
   "license": "ISC",
   "bugs": {
