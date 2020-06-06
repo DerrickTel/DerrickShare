@@ -1,2 +1,22 @@
+# dependencies
+**/node_modules
+
+
+# production
+/dist
+/.vscode
+.vscode
+package-lock.json
+
+#vscode
+.history
+*.log
+.temp/**
+
+#idea
+.idea
+
+#MAC
+.DC_Store
 .DS_Store
-node_modules
+package-lock.json

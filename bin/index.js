@@ -12,7 +12,7 @@ const packages = require('../package')
 const creator = require('../lib/cli-create')
 
 program
-  .version(`react-cli ${packages.version}`)
+  .version(`react-cli-mobile ${packages.version}`)
   .command('create <name>')
   .description('初始化模板')
   .action((projectName, cmd) => {
