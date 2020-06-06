@@ -1,10 +1,6 @@
-/* eslint-disable no-param-reassign */
-/* eslint-disable @typescript-eslint/no-use-before-define */
-/* eslint-disable no-return-await */
 import { Toast } from 'antd-mobile'
 import Qs from 'qs'
 import { REQUEST_URL } from './config'
-import { getCookie, decrypt } from './util'
 
 export enum ContentType {
   json = 'application/json;charset=UTF-8',
@@ -38,28 +34,7 @@ export const createHttpHeaders = (contentType: ContentType = ContentType.json) =
   const header = new Headers()
 
   header.set('Content-Type', contentType)
-
-  // let token_id = '';
-  // let user_id = ''
-  
-  // const  userInfoStr = getCookie('mLBUser');
-  // const decrytedString = decrypt( decodeURIComponent( userInfoStr ) );
-  // if(decrytedString){
-  //   const decrytedJson = JSON.parse(decrytedString);
-  //   if(decrytedJson){
-  //     // eslint-disable-next-line
-  //     token_id = decrytedJson.token_id; user_id = decrytedJson.user_id
-  //   }
-  // }
-  // header.set('user_id', '1114405')
-  // header.set('token_id', '492597ec-c628-48f8-ba60-42ae32c5ef01')
-  // header.set('user_id', user_id)
-  // header.set('token_id', token_id)
-  // 部署时记得注释
-  /*   if (VUE_APP_ENV === 'dev' || VUE_APP_ENV === 'test') {
-    header.set('user_id', '1113813')
-    header.set('token_id', '6a07aaa9-6648-4af0-9a6c-70ca09b45229')
-  } */
+  // 这里可以set业务上面的token
 
   return header
 }
@@ -72,7 +47,6 @@ const $req = async (
     headers,
     contentType = ContentType.json,
     baseUrl,
-    auth = true
   }: ReqConfig
 ) => {
   // body
@@ -94,7 +68,6 @@ const $req = async (
     path += query ? `?${query}` : ''
     body = undefined
   } else if (contentType === ContentType.form) {
-    // body = Qs.stringify(params)
     const { payloadInUrl } = params
     if (payloadInUrl) {
       delete params.payloadInUrl
@@ -141,17 +114,12 @@ const handleRes = async (res: Response) => {
   const parsedRes = await parseRes(res)
   // 如果res.ok，则请求成功
   if (res.ok) {
+    // 这里可以是你和后端自定义的鉴权过期判断
     if (parsedRes.rc === 8) {
       Toast.fail('请登录后操作')
-
-      // const returnUrl = window.location.href
-      // const host = window.location.origin
-
-      // window.location.href = `${host}/login/?returnUrl=${returnUrl}`
       return {}
     }
-    // 首页出现感叹号暂时不知为何
-    // 因为被mock捕获了, 所以你看不到请求, 我已经修复了
+    // 这里可以是你和后端自定义的请求错误判断
     if (parsedRes.rc !== 0 && parsedRes.rc) {
       Toast.fail(parsedRes.msg)
     }

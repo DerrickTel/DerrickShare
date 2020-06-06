@@ -9,6 +9,7 @@
           "firefox": 60,
           "chrome": 67,
           "safari": 11,
+          // 兼容到android4 ios6
           "browsers": ["Android >= 4.0", "ios >= 6"]
         }
       }

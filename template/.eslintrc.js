@@ -35,6 +35,8 @@ module.exports = {
     'react/destructuring-assignment': 0,
     'object-curly-spacing': 2,
     'space-infix-ops': 2,
+    'no-return-await': 2,
+    "no-unused-vars": "error",
     'key-spacing': 2,
     'array-bracket-spacing': 2,
     'space-in-parens': 2,

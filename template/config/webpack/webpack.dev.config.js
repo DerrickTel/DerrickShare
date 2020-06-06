@@ -45,7 +45,7 @@ module.exports = merge(common, {
 
     new FriendlyErrorsWebpackPlugin({
       compilationSuccessInfo: {
-        messages: [`Your application is running here: http://localhost:9000 \n\n Derrick是帅哥`],
+        messages: [`Your application is running here: http://localhost:9000`],
       },
       quiet: true,
     }),
