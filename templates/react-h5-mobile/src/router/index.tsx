@@ -12,7 +12,6 @@ const Application = () => (
   <BrowserRouter
     basename="/"
   >
-    {/* 这里是简单的loading，可以加入自己写的自定义ReactNode */}
     <Suspense fallback={<div>加载中...</div>}>
       <Switch>
         <MyRoute title="首页" exact path="/" component={Home} />

@@ -12,24 +12,18 @@ const postcssFlexbugsFixes = require('postcss-flexbugs-fixes')
 module.exports = {
   plugins: [
     postcssFlexbugsFixes,
-    // postcssPresetEnv({
-    //   autoprefixer: {
-    //     flexbox: 'no-2009',
-    //   },
-    //   stage: 3,
-    // }),
     // 在这个位置加入我们需要配置的代码
     // 在这个位置加入我们需要配置的代码
     // 在这个位置加入我们需要配置的代码
     postcssAspectRatioMini({}),
     postcssPxToViewport({
-      viewportWidth: 750, // (Number) The width of the viewport.
-      viewportHeight: 1334, // (Number) The height of the viewport.
+      viewportWidth: 750, // 基准宽度（一般的设计都是这个基准
+      viewportHeight: 1334, // 基准高度（一般的设计都是这个基准
       unitPrecision: 3, // (Number) The decimal numbers to allow the REM units to grow to.
-      viewportUnit: 'vw', // (String) Expected units.
-      selectorBlackList: ['.list-ignore', /notTransform/], // (Array) The selectors to ignore and leave as px.
-      minPixelValue: 1, // (Number) Set the minimum pixel value to replace.
-      mediaQuery: false, // (Boolean) Allow px to be converted in media queries.
+      viewportUnit: 'vw', // (String) 单位
+      selectorBlackList: ['.list-ignore', /notTransform/], // 带上这个单词的就不会fix为vw单位
+      minPixelValue: 1, // (Number) 最小像素
+      mediaQuery: false, // (Boolean) 允许在媒体查询中转换px。
       exclude: /(\/|\\)(node_modules)(\/|\\)/,
     }),
     postcssWriteSvg({

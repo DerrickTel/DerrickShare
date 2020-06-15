@@ -1,25 +1,24 @@
 {
-  "name": "react-cli-mobile",
-  "version": "0.0.3",
+  "name": "react-cli-library",
+  "version": "0.0.1",
   "description": "",
   "bin": {
-    "react-cli-mobile": "./bin/index.js"
+    "react-cli": "./bin/index.js"
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/DerrickTel/share.git"
+    "url": "git+https://github.com/DerrickTel/react-cli.git"
   },
   "keywords": [
     "react",
-    "mobile",
     "cli"
   ],
   "author": "",
   "license": "ISC",
   "bugs": {
-    "url": "https://github.com/DerrickTel/share/issues"
+    "url": "https://github.com/DerrickTel/react-cli/issues"
   },
-  "homepage": "https://github.com/DerrickTel/share#readme",
+  "homepage": "https://github.com/DerrickTel/react-cli#readme",
   "dependencies": {
     "chalk": "^4.0.0",
     "co": "^4.6.0",
@@ -37,6 +36,6 @@
     "validate-npm-package-name": "^3.0.0"
   },
   "devDependencies": {
-    "strip-ansi": "^6.0.0"
+    "inquirer": "^7.2.0"
   }
 }
