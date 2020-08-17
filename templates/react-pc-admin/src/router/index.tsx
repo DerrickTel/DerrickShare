@@ -2,6 +2,7 @@ import React, { Suspense, lazy } from 'react';
 import {
   BrowserRouter, Switch, Route, RouteProps,
 } from 'react-router-dom';
+import { Spin } from 'antd';
 import WW from '@/pages/home';
 import routeList from '../../config/route/index';
 
@@ -31,13 +32,14 @@ const renderRoute = (routes, path) => routes.map((route) => (
     render={(props: any) => (
       <route.component {...props} routes={route.routes} />
     )}
-  />));
+  />
+));
 
 const Application = () => (
   <BrowserRouter
     basename="/"
   >
-    <Suspense fallback={<div>加载中...</div>}>
+    <Suspense fallback={<Spin />}>
       <Switch>
         {/* <MyRoute title="首页" exact path="/" component={Home} />
 

@@ -19,6 +19,10 @@ export default [
           },
         ],
       },
+      {
+        path: '*',
+        component: lazy(() => import('@/pages/notFound')),
+      },
     ],
   },
   {
